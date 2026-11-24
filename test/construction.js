@@ -258,6 +258,38 @@ test('remove link returns false if no link removed', function () {
   expect(!!alsoNo).toBe(false);
 });
 
+test('removing a stale link does not remove its replacement', function () {
+  var graph = createGraph();
+  var oldLink = graph.addLink(1, 2);
+  graph.removeLink(oldLink);
+  var replacement = graph.addLink(1, 2);
+  var changes = 0;
+  graph.on('changed', function () { changes += 1; });
+
+  expect(graph.removeLink(oldLink)).toBe(false);
+  expect(graph.getLinkCount()).toBe(1);
+  expect(graph.getLink(1, 2)).toBe(replacement);
+  expect(Array.from(graph.getLinks(1))).toEqual([replacement]);
+  expect(Array.from(graph.getLinks(2))).toEqual([replacement]);
+  expect(changes).toBe(0);
+});
+
+test('removing a link from another graph does not remove a link with the same id', function () {
+  var graph = createGraph();
+  var link = graph.addLink(1, 2);
+  var otherGraph = createGraph();
+  var otherLink = otherGraph.addLink(1, 2);
+  var changes = 0;
+  graph.on('changed', function () { changes += 1; });
+
+  expect(graph.removeLink(otherLink)).toBe(false);
+  expect(graph.getLinkCount()).toBe(1);
+  expect(graph.getLink(1, 2)).toBe(link);
+  expect(Array.from(graph.getLinks(1))).toEqual([link]);
+  expect(Array.from(graph.getLinks(2))).toEqual([link]);
+  expect(changes).toBe(0);
+});
+
 test('remove isolated node fires changed event', function() {
   var graph = createGraph();
   graph.addNode(1);
